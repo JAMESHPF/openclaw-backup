@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "openclaw_dir": "~/.openclaw",
+  "backup": {
+    "auto_discover_workspaces": true,
+    "workspace_pattern": "workspace*",
+    "include": {
+      "core_config": [
+        "openclaw.json",
+        ".env",
+        "auth-profiles.json"
+      ],
+      "workspaces": "auto",
+      "shared": true,
+      "agents": true,
+      "credentials": true,
+      "logs": false,
+      "browser": false,
+      "memory": true,
+      "devices": false
+    },
+    "sensitive_files": [
+      ".env",
+      "auth-profiles.json",
+      "credentials/*"
+    ],
+    "exclude_patterns": [
+      "*.log",
+      "*.bak",
+      "*.tmp",
+      ".DS_Store",
+      "node_modules",
+      "cron-backup.json"
+    ],
+    "path_placeholders": {
+      "enabled": true,
+      "patterns": [
+        {
+          "find": "{{HOME}}/.openclaw",
+          "replace": "{{OPENCLAW_DIR}}"
+        },
+        {
+          "find": "/root/.openclaw",
+          "replace": "{{OPENCLAW_DIR}}"
+        }
+      ]
+    }
+  },
+  "restore": {
+    "backup_existing": true,
+    "backup_suffix": ".before-restore-{{TIMESTAMP}}",
+    "auto_fix_paths": true,
+    "verify_structure": true
+  },
+  "github": {
+    "enabled": false,
+    "repo": "username/openclaw-workspace",
+    "auto_upload": false,
+    "release_prefix": "v"
+  }
+}

@@ -1,0 +1,15 @@
+# Ignore backup files
+*.tar.gz
+*.bak
+*.tmp
+
+# Ignore test backups
+test-*
+verify-*
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
