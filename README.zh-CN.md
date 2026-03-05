@@ -243,7 +243,7 @@ openclaw gateway restart
 
 ### 自动备份（推荐）
 
-设置自动每日/每周备份，支持通知：
+设置自动每日/每周备份，支持 agent 通知：
 
 ```bash
 # 运行设置向导
@@ -252,7 +252,7 @@ openclaw gateway restart
 # 向导会引导你完成：
 # 1. 备份计划（每天/每周/自定义）
 # 2. GitHub 上传（可选）
-# 3. Telegram 通知（可选）
+# 3. Agent 通知（选择接收通知的 agent）
 # 4. 备份保留策略
 
 # 测试自动备份
@@ -267,7 +267,7 @@ tail -f ~/.openclaw/logs/auto-backup.log
 
 **功能特性**：
 - 通过 cron 定时备份
-- 成功/失败 Telegram 通知
+- Agent 通知（通过 OpenClaw 内部消息系统）
 - 自动上传到 GitHub
 - 自动清理旧备份
 - 详细日志记录

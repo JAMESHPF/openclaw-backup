@@ -96,22 +96,34 @@ fi
 
 echo ""
 
-# Telegram notification
-echo "3. Telegram Notification (optional)"
-read -p "Do you want to receive Telegram notifications? (y/N): " use_telegram
-
-if [[ "$use_telegram" =~ ^[Yy]$ ]]; then
-    echo ""
-    echo "To get your Telegram credentials:"
-    echo "  1. Create a bot with @BotFather and get the bot token"
-    echo "  2. Get your chat ID from @userinfobot"
-    echo ""
-    read -p "Enter Telegram bot token: " TELEGRAM_BOT_TOKEN
-    read -p "Enter Telegram chat ID: " TELEGRAM_CHAT_ID
-else
-    TELEGRAM_BOT_TOKEN=""
-    TELEGRAM_CHAT_ID=""
+# Agent notification
+echo "3. Agent Notification"
+echo ""
+echo "Available agents:"
+if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+    # Extract agent IDs from config
+    if command -v jq >/dev/null 2>&1; then
+        jq -r '.agents.list[]?.id // empty' "$HOME/.openclaw/openclaw.json" 2>/dev/null | while read -r agent_id; do
+            echo "  - $agent_id"
+        done
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c "
+import json
+with open('$HOME/.openclaw/openclaw.json') as f:
+    config = json.load(f)
+    for agent in config.get('agents', {}).get('list', []):
+        if 'id' in agent:
+            print(f\"  - {agent['id']}\")
+" 2>/dev/null
+    fi
 fi
+
+echo ""
+read -p "Which agent should receive backup notifications? (default: atlas): " NOTIFY_AGENT
+NOTIFY_AGENT="${NOTIFY_AGENT:-atlas}"
+
+read -p "Which channel to use for notifications? (default: telegram): " NOTIFY_CHANNEL
+NOTIFY_CHANNEL="${NOTIFY_CHANNEL:-telegram}"
 
 echo ""
 
@@ -129,9 +141,11 @@ cat > "$HOME/.openclaw/.backup-env" <<EOF
 # GitHub repository for backup uploads (leave empty to disable)
 export OPENCLAW_BACKUP_GITHUB_REPO="$GITHUB_REPO"
 
-# Telegram notification settings (leave empty to disable)
-export OPENCLAW_BACKUP_TELEGRAM_TOKEN="$TELEGRAM_BOT_TOKEN"
-export OPENCLAW_BACKUP_TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
+# Agent to receive backup notifications
+export OPENCLAW_BACKUP_NOTIFY_AGENT="$NOTIFY_AGENT"
+
+# Channel for agent notifications (telegram, discord, etc.)
+export OPENCLAW_BACKUP_NOTIFY_CHANNEL="$NOTIFY_CHANNEL"
 
 # Number of local backups to keep
 export OPENCLAW_BACKUP_KEEP="$KEEP_BACKUPS"
@@ -188,7 +202,7 @@ echo ""
 echo "Configuration:"
 echo "  Schedule: $SCHEDULE_DESC"
 echo "  GitHub: ${GITHUB_REPO:-Disabled}"
-echo "  Telegram: ${TELEGRAM_BOT_TOKEN:+Enabled}"
+echo "  Notify Agent: $NOTIFY_AGENT (via $NOTIFY_CHANNEL)"
 echo "  Keep backups: $KEEP_BACKUPS"
 echo ""
 echo "Logs: ~/.openclaw/logs/auto-backup.log"

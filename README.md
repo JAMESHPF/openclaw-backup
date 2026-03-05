@@ -243,7 +243,7 @@ If you accidentally exposed a backup with sensitive information:
 
 ### Automatic Backups (Recommended)
 
-Set up automatic daily/weekly backups with notifications:
+Set up automatic daily/weekly backups with agent notifications:
 
 ```bash
 # Run setup wizard
@@ -252,7 +252,7 @@ Set up automatic daily/weekly backups with notifications:
 # The wizard will guide you through:
 # 1. Backup schedule (daily/weekly/custom)
 # 2. GitHub upload (optional)
-# 3. Telegram notifications (optional)
+# 3. Agent notification (which agent to notify)
 # 4. Backup retention policy
 
 # Test the automatic backup
@@ -267,7 +267,7 @@ tail -f ~/.openclaw/logs/auto-backup.log
 
 **Features:**
 - Scheduled backups via cron
-- Telegram notifications on success/failure
+- Agent notifications on success/failure (via OpenClaw internal messaging)
 - Automatic GitHub upload
 - Old backup cleanup
 - Detailed logging
