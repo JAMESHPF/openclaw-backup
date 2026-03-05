@@ -18,7 +18,6 @@ NC='\033[0m'
 if [ "$1" = "--disable" ]; then
     echo -e "${YELLOW}Disabling auto backup...${NC}"
 
-    # Remove cron job
     if crontab -l 2>/dev/null | grep -q "auto-backup-wrapper.sh"; then
         crontab -l 2>/dev/null | grep -v "auto-backup-wrapper.sh" | crontab -
         echo -e "${GREEN}✓ Cron job removed${NC}"
@@ -26,7 +25,6 @@ if [ "$1" = "--disable" ]; then
         echo "No cron job found"
     fi
 
-    # Remove configuration
     if [ -f "$HOME/.openclaw/.backup-env" ]; then
         rm "$HOME/.openclaw/.backup-env"
         echo -e "${GREEN}✓ Configuration removed${NC}"
@@ -51,11 +49,10 @@ if [ -f "$HOME/.openclaw/.backup-env" ]; then
     fi
 fi
 
-# Collect configuration
 echo "Let's configure automatic backups for OpenClaw."
 echo ""
 
-# Backup schedule
+# === 1. Backup schedule ===
 echo "1. Backup Schedule"
 echo "   a) Daily (recommended)"
 echo "   b) Weekly"
@@ -64,11 +61,11 @@ read -p "Choose schedule (a/b/c): " schedule_choice
 
 case "$schedule_choice" in
     a|A)
-        CRON_SCHEDULE="0 2 * * *"  # 2 AM daily
+        CRON_SCHEDULE="0 2 * * *"
         SCHEDULE_DESC="Daily at 2:00 AM"
         ;;
     b|B)
-        CRON_SCHEDULE="0 2 * * 0"  # 2 AM Sunday
+        CRON_SCHEDULE="0 2 * * 0"
         SCHEDULE_DESC="Weekly on Sunday at 2:00 AM"
         ;;
     c|C)
@@ -84,9 +81,9 @@ esac
 
 echo ""
 
-# GitHub configuration
+# === 2. GitHub ===
 echo "2. GitHub Upload (optional)"
-read -p "Do you want to upload backups to GitHub? (y/N): " use_github
+read -p "Upload backups to GitHub? (y/N): " use_github
 
 if [[ "$use_github" =~ ^[Yy]$ ]]; then
     read -p "Enter GitHub repository (e.g., username/openclaw-backups): " GITHUB_REPO
@@ -96,12 +93,11 @@ fi
 
 echo ""
 
-# Agent notification
-echo "3. Agent Notification"
+# === 3. Agent notification ===
+echo "3. Notification"
 echo ""
 echo "Available agents:"
 if [ -f "$HOME/.openclaw/openclaw.json" ]; then
-    # Extract agent IDs from config
     if command -v jq >/dev/null 2>&1; then
         jq -r '.agents.list[]?.id // empty' "$HOME/.openclaw/openclaw.json" 2>/dev/null | while read -r agent_id; do
             echo "  - $agent_id"
@@ -113,21 +109,27 @@ with open('$HOME/.openclaw/openclaw.json') as f:
     config = json.load(f)
     for agent in config.get('agents', {}).get('list', []):
         if 'id' in agent:
-            print(f\"  - {agent['id']}\")
+            print(f'  - {agent[\"id\"]}')
 " 2>/dev/null
     fi
 fi
 
 echo ""
-read -p "Which agent should receive backup notifications? (default: atlas): " NOTIFY_AGENT
+read -p "Which agent account to send notifications from? (default: atlas): " NOTIFY_AGENT
 NOTIFY_AGENT="${NOTIFY_AGENT:-atlas}"
 
-read -p "Which channel to use for notifications? (default: telegram): " NOTIFY_CHANNEL
-NOTIFY_CHANNEL="${NOTIFY_CHANNEL:-telegram}"
+echo ""
+echo "Enter your Telegram chat ID (your personal user ID)."
+echo "You can get it from @userinfobot on Telegram."
+read -p "Telegram chat ID: " NOTIFY_TARGET
+
+if [ -z "$NOTIFY_TARGET" ]; then
+    echo -e "${YELLOW}⚠️  No chat ID provided, notifications will be disabled${NC}"
+fi
 
 echo ""
 
-# Backup retention
+# === 4. Retention ===
 read -p "How many backups to keep locally? (default: 10): " KEEP_BACKUPS
 KEEP_BACKUPS="${KEEP_BACKUPS:-10}"
 
@@ -141,11 +143,11 @@ cat > "$HOME/.openclaw/.backup-env" <<EOF
 # GitHub repository for backup uploads (leave empty to disable)
 export OPENCLAW_BACKUP_GITHUB_REPO="$GITHUB_REPO"
 
-# Agent to receive backup notifications
+# Agent account to send notifications from
 export OPENCLAW_BACKUP_NOTIFY_AGENT="$NOTIFY_AGENT"
 
-# Channel for agent notifications (telegram, discord, etc.)
-export OPENCLAW_BACKUP_NOTIFY_CHANNEL="$NOTIFY_CHANNEL"
+# Telegram chat ID to send notifications to
+export OPENCLAW_BACKUP_NOTIFY_TARGET="$NOTIFY_TARGET"
 
 # Number of local backups to keep
 export OPENCLAW_BACKUP_KEEP="$KEEP_BACKUPS"
@@ -159,9 +161,8 @@ echo ""
 # Setup cron job
 echo "Setting up cron job..."
 
-# Create wrapper script that sources environment
 WRAPPER_SCRIPT="$HOME/.openclaw/openclaw-backup/auto-backup-wrapper.sh"
-cat > "$WRAPPER_SCRIPT" <<'EOF'
+cat > "$WRAPPER_SCRIPT" <<'WEOF'
 #!/bin/bash
 # Auto-generated wrapper script for OpenClaw auto backup
 
@@ -170,26 +171,23 @@ if [ -f "$HOME/.openclaw/.backup-env" ]; then
     source "$HOME/.openclaw/.backup-env"
 fi
 
+# Ensure PATH includes common locations
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # Run backup
 "$HOME/.openclaw/openclaw-backup/auto-backup.sh" >> "$HOME/.openclaw/logs/auto-backup.log" 2>&1
-EOF
+WEOF
 
 chmod +x "$WRAPPER_SCRIPT"
 
-# Create logs directory
 mkdir -p "$HOME/.openclaw/logs"
 
-# Add to crontab
-CRON_ENTRY="$CRON_SCHEDULE $WRAPPER_SCRIPT"
-
-# Check if cron entry already exists
+# Update crontab
 if crontab -l 2>/dev/null | grep -q "auto-backup-wrapper.sh"; then
-    # Remove old entry
     crontab -l 2>/dev/null | grep -v "auto-backup-wrapper.sh" | crontab -
 fi
 
-# Add new entry
-(crontab -l 2>/dev/null; echo "$CRON_ENTRY") | crontab -
+(crontab -l 2>/dev/null; echo "$CRON_SCHEDULE $WRAPPER_SCRIPT") | crontab -
 
 echo -e "${GREEN}✓ Cron job configured${NC}"
 echo ""
@@ -200,25 +198,23 @@ echo -e "${GREEN}Setup Complete!${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo "Configuration:"
-echo "  Schedule: $SCHEDULE_DESC"
-echo "  GitHub: ${GITHUB_REPO:-Disabled}"
-echo "  Notify Agent: $NOTIFY_AGENT (via $NOTIFY_CHANNEL)"
-echo "  Keep backups: $KEEP_BACKUPS"
+echo "  Schedule:    $SCHEDULE_DESC"
+echo "  GitHub:      ${GITHUB_REPO:-Disabled}"
+echo "  Notify via:  $NOTIFY_AGENT → ${NOTIFY_TARGET:-Disabled}"
+echo "  Keep:        $KEEP_BACKUPS backups"
 echo ""
-echo "Logs: ~/.openclaw/logs/auto-backup.log"
-echo ""
-echo "To test the backup now, run:"
-echo "  $SCRIPT_DIR/auto-backup.sh"
-echo ""
-echo "To disable auto backup, run:"
-echo "  $SCRIPT_DIR/setup-auto-backup.sh --disable"
+echo "Commands:"
+echo "  Test now:    $SCRIPT_DIR/auto-backup.sh"
+echo "  View logs:   tail -f ~/.openclaw/logs/auto-backup.log"
+echo "  Disable:     $SCRIPT_DIR/setup-auto-backup.sh --disable"
 echo ""
 
 # Offer to run test backup
-read -p "Do you want to run a test backup now? (y/N): " run_test
+read -p "Run a test backup now? (y/N): " run_test
 
 if [[ "$run_test" =~ ^[Yy]$ ]]; then
     echo ""
     echo "Running test backup..."
+    source "$HOME/.openclaw/.backup-env"
     "$SCRIPT_DIR/auto-backup.sh"
 fi

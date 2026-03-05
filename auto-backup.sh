@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # OpenClaw Auto Backup Script
-# Automatically backs up OpenClaw, uploads to GitHub, and notifies agent
+# Automatically backs up OpenClaw, uploads to GitHub, and notifies via agent
 
 set -e
 
@@ -11,7 +11,7 @@ CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config-full.json}"
 BACKUP_NAME="auto-backup-$(date +%Y%m%d-%H%M%S)"
 GITHUB_REPO="${OPENCLAW_BACKUP_GITHUB_REPO:-}"
 NOTIFY_AGENT="${OPENCLAW_BACKUP_NOTIFY_AGENT:-atlas}"
-NOTIFY_CHANNEL="${OPENCLAW_BACKUP_NOTIFY_CHANNEL:-telegram}"
+NOTIFY_TARGET="${OPENCLAW_BACKUP_NOTIFY_TARGET:-}"
 KEEP_BACKUPS="${OPENCLAW_BACKUP_KEEP:-10}"
 
 # Colors
@@ -33,34 +33,32 @@ warn() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARN:${NC} $1"
 }
 
-# Send notification to OpenClaw agent
-notify_agent() {
+# Send notification via openclaw message send
+notify() {
     local message="$1"
-    local is_error="${2:-false}"
 
-    if [ -z "$NOTIFY_AGENT" ]; then
-        warn "No agent configured for notifications"
+    if [ -z "$NOTIFY_AGENT" ] || [ -z "$NOTIFY_TARGET" ]; then
+        warn "Notification not configured (agent=$NOTIFY_AGENT, target=$NOTIFY_TARGET)"
         return 0
     fi
 
     # Check if OpenClaw gateway is running
     if ! pgrep -f "openclaw.*gateway" > /dev/null 2>&1; then
-        warn "OpenClaw gateway is not running, skipping agent notification"
+        warn "OpenClaw gateway is not running, skipping notification"
         return 0
     fi
 
-    log "Sending notification to agent: $NOTIFY_AGENT"
+    log "Sending notification via $NOTIFY_AGENT to $NOTIFY_TARGET"
 
-    # Send message to agent
-    if openclaw agent \
-        --agent "$NOTIFY_AGENT" \
+    if openclaw message send \
+        --channel telegram \
+        --account "$NOTIFY_AGENT" \
+        --target "$NOTIFY_TARGET" \
         --message "$message" \
-        --deliver \
-        --channel "$NOTIFY_CHANNEL" \
         > /dev/null 2>&1; then
-        log "Agent notification sent successfully"
+        log "Notification sent successfully"
     else
-        warn "Failed to send agent notification"
+        warn "Failed to send notification"
     fi
 }
 
@@ -73,11 +71,10 @@ main() {
     if ! "$SCRIPT_DIR/backup.sh" --config "$CONFIG_FILE" --yes "$BACKUP_NAME" > /tmp/openclaw-backup.log 2>&1; then
         error "Backup failed"
 
-        # Notify agent of failure
-        notify_agent "❌ OpenClaw 自动备份失败
+        notify "❌ OpenClaw 自动备份失败
 
-时间: $(date '+%Y-%m-%d %H:%M:%S')
-错误: 请查看日志 ~/.openclaw/logs/auto-backup.log" true
+⏰ 时间: $(date '+%Y-%m-%d %H:%M:%S')
+❗ 请查看日志: ~/.openclaw/logs/auto-backup.log"
 
         exit 1
     fi
@@ -95,15 +92,12 @@ main() {
         if command -v gh >/dev/null 2>&1; then
             RELEASE_TAG="backup-$(date +%Y%m%d)"
 
-            # Create or update release
             if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPO" >/dev/null 2>&1; then
-                # Release exists, upload asset
                 gh release upload "$RELEASE_TAG" "$BACKUP_FILE" \
                     --repo "$GITHUB_REPO" \
                     --clobber \
                     > /dev/null 2>&1
             else
-                # Create new release
                 gh release create "$RELEASE_TAG" "$BACKUP_FILE" \
                     --repo "$GITHUB_REPO" \
                     --title "Backup $(date '+%Y-%m-%d')" \
@@ -113,14 +107,13 @@ main() {
 
             if [ $? -eq 0 ]; then
                 log "Uploaded to GitHub successfully"
-                GITHUB_STATUS="✅ 已上传到 GitHub: $GITHUB_REPO"
+                GITHUB_STATUS="🔗 GitHub: $GITHUB_REPO"
             else
                 warn "Failed to upload to GitHub"
                 GITHUB_STATUS="⚠️ GitHub 上传失败"
             fi
         else
             warn "gh CLI not installed, skipping GitHub upload"
-            GITHUB_STATUS="⚠️ gh CLI 未安装，跳过上传"
         fi
     fi
 
@@ -133,23 +126,17 @@ main() {
     # Build success message
     local message="✅ OpenClaw 自动备份成功
 
-📦 备份文件: $BACKUP_NAME
-📊 文件大小: $BACKUP_SIZE
-⏰ 备份时间: $(date '+%Y-%m-%d %H:%M:%S')
-💾 保留数量: $KEEP_BACKUPS 个"
+📦 备份: $BACKUP_NAME
+📊 大小: $BACKUP_SIZE
+⏰ 时间: $(date '+%Y-%m-%d %H:%M:%S')"
 
     if [ -n "$GITHUB_STATUS" ]; then
         message="$message
 $GITHUB_STATUS"
     fi
 
-    message="$message
-
-📁 备份位置: ~/.openclaw/backups/
-📝 日志文件: ~/.openclaw/logs/auto-backup.log"
-
-    # Send success notification to agent
-    notify_agent "$message"
+    # Send success notification
+    notify "$message"
 
     log "Automatic backup completed successfully"
 }
