@@ -44,7 +44,7 @@ notify_agent() {
     fi
 
     # Check if OpenClaw gateway is running
-    if ! pgrep -f "openclaw gateway" > /dev/null 2>&1; then
+    if ! pgrep -f "openclaw.*gateway" > /dev/null 2>&1; then
         warn "OpenClaw gateway is not running, skipping agent notification"
         return 0
     fi
@@ -70,7 +70,7 @@ main() {
 
     # Run backup
     log "Creating backup: $BACKUP_NAME"
-    if ! "$SCRIPT_DIR/backup.sh" --config "$CONFIG_FILE" "$BACKUP_NAME" > /tmp/openclaw-backup.log 2>&1; then
+    if ! "$SCRIPT_DIR/backup.sh" --config "$CONFIG_FILE" --yes "$BACKUP_NAME" > /tmp/openclaw-backup.log 2>&1; then
         error "Backup failed"
 
         # Notify agent of failure
