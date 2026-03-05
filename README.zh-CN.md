@@ -72,6 +72,9 @@ cd ~/.openclaw/openclaw-backup
 
 # 恢复
 ./restore.sh ~/.openclaw/backups/openclaw-backup-xxx.tar.gz
+
+# 设置自动备份（推荐）
+./setup-auto-backup.sh
 ```
 
 ## 功能特性
@@ -82,12 +85,16 @@ cd ~/.openclaw/openclaw-backup
 ✅ **安全可靠** - 恢复前自动备份现有配置
 ✅ **预览模式** - 使用 --dry-run 预览恢复内容
 ✅ **双备份模式** - 标准模式保安全，完整模式做迁移
+✅ **自动备份** - 定时每日/每周备份，支持 Telegram 通知
+✅ **GitHub 集成** - 自动上传备份到私有仓库
 
 ## 文件说明
 
 - `backup.sh` - 备份脚本
 - `restore.sh` - 恢复脚本
 - `cleanup.sh` - 清理旧备份
+- `auto-backup.sh` - 自动备份（含通知）
+- `setup-auto-backup.sh` - 设置自动备份
 - `config.json` - 标准配置（排除敏感文件）⭐
 - `config-full.json` - 完整配置（包含敏感文件）⚠️
 - `QUICKSTART.md` - 快速参考卡片
@@ -233,6 +240,37 @@ openclaw gateway restart
    - 监控账单变化
 
 ## 推荐工作流
+
+### 自动备份（推荐）
+
+设置自动每日/每周备份，支持通知：
+
+```bash
+# 运行设置向导
+./setup-auto-backup.sh
+
+# 向导会引导你完成：
+# 1. 备份计划（每天/每周/自定义）
+# 2. GitHub 上传（可选）
+# 3. Telegram 通知（可选）
+# 4. 备份保留策略
+
+# 测试自动备份
+./auto-backup.sh
+
+# 查看日志
+tail -f ~/.openclaw/logs/auto-backup.log
+
+# 禁用自动备份
+./setup-auto-backup.sh --disable
+```
+
+**功能特性**：
+- 通过 cron 定时备份
+- 成功/失败 Telegram 通知
+- 自动上传到 GitHub
+- 自动清理旧备份
+- 详细日志记录
 
 ### 日常使用
 ```bash
