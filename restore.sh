@@ -1,11 +1,11 @@
 #!/bin/bash
-# OpenClaw 恢复工具
-# 支持配置文件驱动，自动路径修复，适配任何环境
-# 用法: ./restore.sh <backup-file.tar.gz> [--config path/to/config.json]
+# OpenClaw Restore Tool
+# 支持Config file驱动，自动路径修复，适配任何环境
+# Usage: ./restore.sh <backup-file.tar.gz> [--config path/to/config.json]
 
 set -e
 
-# 默认配置
+# default配置
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/config.json"
 BACKUP_FILE=""
@@ -29,22 +29,22 @@ while [[ $# -gt 0 ]]; do
             ;;
         --help|-h)
             cat << EOF
-OpenClaw 通用恢复工具
+OpenClaw Restore Tool
 
-用法: $0 <backup-file.tar.gz> [选项]
+Usage: $0 <backup-file.tar.gz> [选项]
 
-选项:
-  --config FILE     指定配置文件 (默认: backup-config.json)
-  --verbose, -v     显示详细输出
-  --dry-run         预览恢复操作，不实际执行
-  --help, -h        显示此帮助信息
+Options:
+  --config FILE     SpecifyConfig file (default: backup-config.json)
+  --verbose, -v     Show verbose output
+  --dry-run         Preview restore, no actualExecute
+  --help, -h        Show this help
 
-示例:
+Examples:
   $0 openclaw-backup-20260305.tar.gz
   $0 backup.tar.gz --config custom.json
   $0 backup.tar.gz --dry-run --verbose
 
-配置文件格式请参考 backup-config.json
+Config fileformat see backup-config.json
 EOF
             exit 0
             ;;
@@ -57,70 +57,70 @@ EOF
     esac
 done
 
-# 检查备份文件
+# CheckBackup file
 if [ -z "$BACKUP_FILE" ]; then
-    echo "❌ 请指定备份文件"
-    echo "用法: $0 <backup-file.tar.gz>"
+    echo "❌ Please specify backup file"
+    echo "Usage: $0 <backup-file.tar.gz>"
     exit 1
 fi
 
 if [ ! -f "$BACKUP_FILE" ]; then
-    echo "❌ 备份文件不存在: $BACKUP_FILE"
+    echo "❌ Backup filenot found: $BACKUP_FILE"
     exit 1
 fi
 
 # 验证校验和（如果存在）
 CHECKSUM_FILE="${BACKUP_FILE}.sha256"
 if [ -f "$CHECKSUM_FILE" ]; then
-    echo "🔐 验证备份完整性..."
+    echo "🔐 Verifying backup integrity..."
     if command -v sha256sum &> /dev/null; then
         if sha256sum -c "$CHECKSUM_FILE" 2>/dev/null; then
-            echo "   ✓ 校验和验证通过"
+            echo "   ✓ Checksum verification passed"
         else
-            echo "   ❌ 校验和验证失败！备份文件可能已损坏"
-            read -p "是否继续恢复? (y/N): " -n 1 -r
+            echo "   ❌ Checksum verification failed! Backup file may be corrupted"
+            read -p "Continue restore? (y/N): " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                echo "❌ 已取消恢复"
+                echo "❌ Restore cancelled"
                 exit 1
             fi
         fi
     elif command -v shasum &> /dev/null; then
         if shasum -a 256 -c "$CHECKSUM_FILE" 2>/dev/null; then
-            echo "   ✓ 校验和验证通过"
+            echo "   ✓ Checksum verification passed"
         else
-            echo "   ❌ 校验和验证失败！备份文件可能已损坏"
-            read -p "是否继续恢复? (y/N): " -n 1 -r
+            echo "   ❌ Checksum verification failed! Backup file may be corrupted"
+            read -p "Continue restore? (y/N): " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                echo "❌ 已取消恢复"
+                echo "❌ Restore cancelled"
                 exit 1
             fi
         fi
     fi
 else
-    echo "⚠️  未找到校验和文件，跳过完整性验证"
+    echo "⚠️  Checksum file not found, skipping integrity verification"
 fi
 
-# 检查配置文件
+# CheckConfig file
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "⚠️  配置文件不存在: $CONFIG_FILE"
-    echo "使用默认配置..."
+    echo "⚠️  Config file not found: $CONFIG_FILE"
+    echo "Using default config..."
     OPENCLAW_DIR="$HOME/.openclaw"
     BACKUP_EXISTING=true
     AUTO_FIX_PATHS=true
 else
-    # 读取配置
+    # Read config
     if command -v jq &> /dev/null; then
         JSON_PARSER="jq"
     elif command -v python3 &> /dev/null; then
         JSON_PARSER="python3"
     else
-        echo "❌ 需要 jq 或 python3 来解析配置文件"
+        echo "❌ jq or python3 required for config parsing"
         exit 1
     fi
 
-    # 解析配置的辅助函数
+    # 解析配置\ 辅助函数
     get_config() {
         local key="$1"
         local default="$2"
@@ -142,66 +142,66 @@ fi
 
 TEMP_DIR="/tmp/openclaw-restore-$$"
 
-echo "🔄 开始恢复 OpenClaw 配置..."
-[ "$VERBOSE" = true ] && echo "   备份文件: $BACKUP_FILE"
-[ "$VERBOSE" = true ] && echo "   目标目录: $OPENCLAW_DIR"
-[ "$VERBOSE" = true ] && echo "   配置文件: $CONFIG_FILE"
+echo "🔄 Starting OpenClaw configuration restore..."
+[ "$VERBOSE" = true ] && echo "   Backup file: $BACKUP_FILE"
+[ "$VERBOSE" = true ] && echo "   Target directory: $OPENCLAW_DIR"
+[ "$VERBOSE" = true ] && echo "   Config file: $CONFIG_FILE"
 [ "$DRY_RUN" = true ] && echo "   ⚠️  预览模式 (不会实际修改文件)"
 
-# 备份现有配置
+# Backup existing config
 if [ "$BACKUP_EXISTING" = "true" ] && [ -d "$OPENCLAW_DIR" ] && [ "$DRY_RUN" = false ]; then
     BACKUP_OLD="$OPENCLAW_DIR.before-restore-$(date +%Y%m%d-%H%M%S)"
-    echo "💾 备份现有配置到 $BACKUP_OLD..."
+    echo "💾 Backing up existing config to $BACKUP_OLD..."
     mv "$OPENCLAW_DIR" "$BACKUP_OLD"
-    echo "   ✓ 现有配置已备份"
+    echo "   ✓ Existing config backed up"
 fi
 
-# 解压备份
-echo "📦 解压备份文件..."
+# Extract备份
+echo "📦 ExtractBackup file..."
 mkdir -p "$TEMP_DIR"
 tar -xzf "$BACKUP_FILE" -C "$TEMP_DIR"
 
-# 查找备份目录
+# FindBackup directory
 BACKUP_CONTENT=$(find "$TEMP_DIR" -type d -name "openclaw-backup-*" | head -1)
 
 if [ -z "$BACKUP_CONTENT" ]; then
-    echo "❌ 备份文件格式错误"
+    echo "❌ Backup file格式错误"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
-# 显示备份信息
+# ShowBackup info
 if [ -f "$BACKUP_CONTENT/BACKUP_INFO.txt" ]; then
     echo ""
-    echo "📋 备份信息:"
+    echo "📋 Backup info:"
     cat "$BACKUP_CONTENT/BACKUP_INFO.txt"
     echo ""
 fi
 
-# 预览模式：显示将要恢复的文件
+# 预览模式：ShowFiles to be restored
 if [ "$DRY_RUN" = true ]; then
     echo ""
-    echo "📁 将要恢复的文件:"
+    echo "📁 Files to be restored:"
     find "$BACKUP_CONTENT" -type f -o -type d | sed "s|$BACKUP_CONTENT|  |" | head -50
     echo ""
-    echo "💡 使用不带 --dry-run 参数来实际执行恢复"
+    echo "💡 Use without --dry-run to actually restore"
     rm -rf "$TEMP_DIR"
     exit 0
 fi
 
-# 创建目标目录
+# CreateTarget directory
 mkdir -p "$OPENCLAW_DIR"
 
-# 恢复文件
-echo "📁 恢复文件..."
+# Restoring files
+echo "📁 Restoring files..."
 cp -r "$BACKUP_CONTENT"/* "$OPENCLAW_DIR/"
-echo "   ✓ 文件已恢复"
+echo "   ✓ Files restored"
 
-# 自动修复路径
+# Auto-fixing paths
 if [ "$AUTO_FIX_PATHS" = "true" ] && [ -f "$OPENCLAW_DIR/openclaw.json" ]; then
-    echo "🔧 自动修复路径..."
+    echo "🔧 Auto-fixing paths..."
 
-    # 替换占位符为实际路径
+    # Replace placeholders with actual paths
     if [[ "$OSTYPE" == "darwin"* ]]; then
         sed -i '' "s|{{OPENCLAW_DIR}}|$OPENCLAW_DIR|g" "$OPENCLAW_DIR/openclaw.json"
         sed -i '' "s|{{HOME}}|$HOME|g" "$OPENCLAW_DIR/openclaw.json"
@@ -210,39 +210,39 @@ if [ "$AUTO_FIX_PATHS" = "true" ] && [ -f "$OPENCLAW_DIR/openclaw.json" ]; then
         sed -i "s|{{HOME}}|$HOME|g" "$OPENCLAW_DIR/openclaw.json"
     fi
 
-    echo "   ✓ 路径已修复"
+    echo "   ✓ Paths fixed"
 
-    # 验证路径修复
+    # Verify path fix
     if grep -q "{{OPENCLAW_DIR}}" "$OPENCLAW_DIR/openclaw.json" 2>/dev/null; then
-        echo "   ⚠️  警告: 仍有未替换的占位符"
+        echo "   ⚠️  Warning: unreplaced placeholders remain"
     fi
 
     if grep -q "/root/.openclaw" "$OPENCLAW_DIR/openclaw.json" 2>/dev/null; then
-        echo "   ⚠️  警告: 检测到 /root 路径，可能需要手动修复"
+        echo "   ⚠️  Warning: /root path detected, may need manual fix"
     fi
 fi
 
-# 清理
+# Cleanup
 rm -rf "$TEMP_DIR"
 
 echo ""
-echo "✅ 恢复完成！"
+echo "✅ Restore complete！"
 echo ""
-echo "🔄 下一步操作:"
-echo "   1. 重启 OpenClaw Gateway:"
+echo "🔄 Next steps:"
+echo "   1. Restart OpenClaw Gateway:"
 echo "      openclaw gateway restart"
 echo ""
-echo "   2. 检查状态:"
+echo "   2. Check status:"
 echo "      openclaw status"
 echo ""
-echo "   3. 如需重新配对 Telegram Bot:"
-echo "      - 向每个 bot 发送 /start"
-echo "      - 获取 pairing code"
-echo "      - 执行: openclaw pairing approve telegram <code>"
+echo "   3. To re-pair Telegram Bot:"
+echo "      - Send to each bot /start"
+echo "      - Get pairing code"
+echo "      - Execute: openclaw pairing approve telegram <code>"
 echo ""
 
-# 验证关键文件
-echo "🔍 验证关键文件:"
+# Verifying critical files
+echo "🔍 Verifying critical files:"
 CRITICAL_FILES=("openclaw.json" ".env")
 ALL_OK=true
 
@@ -250,12 +250,12 @@ for file in "${CRITICAL_FILES[@]}"; do
     if [ -f "$OPENCLAW_DIR/$file" ]; then
         echo "   ✓ $file"
     else
-        echo "   ✗ $file (缺失)"
+        echo "   ✗ $file (missing)"
         ALL_OK=false
     fi
 done
 
 if [ "$ALL_OK" = false ]; then
     echo ""
-    echo "⚠️  警告: 部分关键文件缺失，请检查备份完整性"
+    echo "⚠️  Warning: 部分关键文件missing，请Check备份完整性"
 fi

@@ -1,13 +1,13 @@
 #!/bin/bash
-# OpenClaw 备份清理工具
-# 用于清理旧的备份文件，保留最近的 N 个备份
-# 用法: ./cleanup.sh [--keep N]
+# OpenClaw Backup Cleanup Tool
+# Cleanup old backup files, keep last N backups
+# Usage: ./cleanup.sh [--keep N]
 
 set -e
 
 OPENCLAW_DIR="$HOME/.openclaw"
 BACKUPS_DIR="$OPENCLAW_DIR/backups"
-KEEP_COUNT=10  # 默认保留最近 10 个备份
+KEEP_COUNT=10  # defaultKeep last 10 backups
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
@@ -18,61 +18,61 @@ while [[ $# -gt 0 ]]; do
             ;;
         --help|-h)
             cat << EOF
-OpenClaw 备份清理工具
+OpenClaw Backup Cleanup Tool
 
-用法: $0 [选项]
+Usage: $0 [选项]
 
-选项:
-  --keep N          保留最近 N 个备份 (默认: 10)
-  --help, -h        显示此帮助信息
+Options:
+  --keep N          Keep last N backups (default: 10)
+  --help, -h        Show this help
 
-示例:
-  $0                # 保留最近 10 个备份
-  $0 --keep 5       # 保留最近 5 个备份
-  $0 --keep 20      # 保留最近 20 个备份
+Examples:
+  $0                # Keep last 10 backups
+  $0 --keep 5       # Keep last 5 backups
+  $0 --keep 20      # Keep last 20 backups
 
-备份目录: $BACKUPS_DIR
+Backup directory: $BACKUPS_DIR
 EOF
             exit 0
             ;;
         *)
-            echo "未知参数: $1"
-            echo "使用 --help 查看帮助"
+            echo "Unknown parameter: $1"
+            echo "Use --help for help"
             exit 1
             ;;
     esac
 done
 
-# 检查备份目录
+# CheckBackup directory
 if [ ! -d "$BACKUPS_DIR" ]; then
-    echo "📁 备份目录不存在: $BACKUPS_DIR"
-    echo "   没有需要清理的备份"
+    echo "📁 Backup directorynot found: $BACKUPS_DIR"
+    echo "   No backups to clean"
     exit 0
 fi
 
-# 统计备份文件数量
+# CountBackup filecount
 BACKUP_COUNT=$(find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f | wc -l | tr -d ' ')
 
 if [ "$BACKUP_COUNT" -eq 0 ]; then
-    echo "📁 备份目录为空，没有需要清理的备份"
+    echo "📁 Backup directoryis empty，No backups to clean"
     exit 0
 fi
 
-echo "🔍 发现 $BACKUP_COUNT 个备份文件"
-echo "📋 保留最近 $KEEP_COUNT 个备份"
+echo "🔍 Found $BACKUP_COUNT \ Backup file"
+echo "📋 Keep last $KEEP_COUNT backups"
 
 if [ "$BACKUP_COUNT" -le "$KEEP_COUNT" ]; then
-    echo "✅ 备份数量未超过限制，无需清理"
+    echo "✅ Backup count within limit, no cleanup needed"
     exit 0
 fi
 
-# 计算需要删除的数量
+# 计算需要删除\ count
 DELETE_COUNT=$((BACKUP_COUNT - KEEP_COUNT))
-echo "🗑️  将删除 $DELETE_COUNT 个旧备份"
+echo "🗑️  Will delete $DELETE_COUNT old backups"
 echo ""
 
-# 列出将要删除的文件
-echo "将要删除的备份:"
+# 列出将要删除\ 文件
+echo "Backups to be deleted:"
 find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f -print0 | \
     xargs -0 ls -t | \
     tail -n "$DELETE_COUNT" | \
@@ -82,30 +82,30 @@ find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f -print0 | \
     done
 
 echo ""
-read -p "确认删除这些备份? (y/N): " -n 1 -r
+read -p "Confirm deletion? (y/N): " -n 1 -r
 echo
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ 已取消"
+    echo "❌ Cancelled"
     exit 0
 fi
 
-# 删除旧备份
-echo "🗑️  开始删除..."
+# Delete old backups
+echo "🗑️  Starting deletion..."
 DELETED=0
 
-# 使用数组存储要删除的文件
+# 使用数组存储要删除\ 文件
 mapfile -t FILES_TO_DELETE < <(find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f -print0 | xargs -0 ls -t | tail -n "$DELETE_COUNT")
 
 for file in "${FILES_TO_DELETE[@]}"; do
     if [ -f "$file" ]; then
-        # 同时删除校验和文件
+        # Also delete checksum file
         rm -f "$file" "${file}.sha256"
-        echo "  ✓ 已删除: $(basename "$file")"
+        echo "  ✓ deleted: $(basename "$file")"
         DELETED=$((DELETED + 1))
     fi
 done
 
 echo ""
-echo "✅ 清理完成，已删除 $DELETE_COUNT 个旧备份"
-echo "📁 当前保留 $KEEP_COUNT 个备份"
+echo "✅ Cleanupcomplete，deleted $DELETE_COUNT old backups"
+echo "📁 Currently keeping $KEEP_COUNT backups"
