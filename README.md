@@ -41,19 +41,19 @@ Backups are saved to `~/.openclaw/backups/`.
 
 This tool has two modes to balance security and completeness:
 
-| | Standard (default) | Full |
+| | ✅ Standard (default) | ⚠️ Full |
 |---|---|---|
 | **Command** | `./backup.sh` | `./backup.sh --config config-full.json` |
 | **Use case** | Daily backup, config sharing | Machine migration, disaster recovery |
-| openclaw.json | Included | Included |
-| Workspaces | Included | Included |
-| Shared resources | Included | Included |
-| Memory data | Included | Included |
-| .env (API keys) | **Excluded** | Included |
-| auth-profiles.json | **Excluded** | Included |
-| credentials/ | **Excluded** | Included |
-| agents/ | **Excluded** | Included |
-| **Safe for GitHub?** | Yes | **No - contains secrets** |
+| 📋 openclaw.json | ✅ Included | ✅ Included |
+| 📁 Workspaces | ✅ Included | ✅ Included |
+| 🤝 Shared resources | ✅ Included | ✅ Included |
+| 🧠 Memory data | ✅ Included | ✅ Included |
+| 🔑 .env (API keys) | ❌ Excluded | ⚠️ Included |
+| 🔐 auth-profiles.json | ❌ Excluded | ⚠️ Included |
+| 🔐 credentials/ | ❌ Excluded | ⚠️ Included |
+| 🤖 agents/ | ❌ Excluded | ⚠️ Included |
+| **Safe for GitHub?** | ✅ Yes | ❌ No - contains secrets |
 
 > **Rule of thumb:** Use standard mode for everything except machine migration. Delete full backups immediately after use.
 
