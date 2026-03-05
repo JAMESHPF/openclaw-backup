@@ -2,6 +2,8 @@
 
 Complete backup and restore solution for OpenClaw configurations.
 
+English | [简体中文](README.zh-CN.md)
+
 ## 📦 Installation
 
 ### One-Line Install (Recommended)
