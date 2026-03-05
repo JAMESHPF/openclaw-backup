@@ -1,16 +1,16 @@
-# OpenClaw 备份工具
+# OpenClaw Backup Tool
 
-OpenClaw 配置的完整备份和恢复解决方案。
+Complete backup and restore solution for OpenClaw configurations.
 
-## 📦 安装
+## 📦 Installation
 
-### 一键安装（推荐）
+### One-Line Install (Recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JAMESHPF/openclaw-backup/main/install.sh | bash
 ```
 
-### 手动安装
+### Manual Installation
 
 ```bash
 git clone https://github.com/JAMESHPF/openclaw-backup.git ~/.openclaw/openclaw-backup
@@ -18,81 +18,81 @@ cd ~/.openclaw/openclaw-backup
 chmod +x *.sh
 ```
 
-### 依赖要求
+### Requirements
 
-- OpenClaw（必须）
-- jq 或 python3（必须，用于解析配置）
-- git（安装时需要）
+- OpenClaw (required)
+- jq or python3 (required for config parsing)
+- git (required for installation)
 
-## ⚠️ 重要安全提示
+## ⚠️ Important Security Notice
 
-**OpenClaw 配置包含敏感信息，备份时需要特别注意安全！**
+**OpenClaw configurations contain sensitive information. Handle backups with care!**
 
-### 敏感信息清单
+### Sensitive Information Checklist
 
-**🔴 高度敏感（不应公开）**：
-- `.env` - API 密钥（Claude, OpenAI, Tavily, Brave 等）
-- `auth-profiles.json` - OAuth tokens 和认证凭证
-- `credentials/` - 各种服务的凭证
-- `openclaw.json` 中的 Telegram bot tokens
+**🔴 Highly Sensitive (Never Share Publicly)**:
+- `.env` - API keys (Claude, OpenAI, Tavily, Brave, etc.)
+- `auth-profiles.json` - OAuth tokens and authentication credentials
+- `credentials/` - Service credentials
+- Telegram bot tokens in `openclaw.json`
 
-**风险**：泄露后可能导致账户被盗用、产生费用、服务被滥用
+**Risk**: Exposure may lead to account compromise, unauthorized charges, service abuse
 
-**🟡 中度敏感（谨慎分享）**：
-- `memory/*.sqlite` - 完整的对话历史
-- `workspace/memory/*.md` - 日常工作日志和项目讨论
+**🟡 Moderately Sensitive (Share Cautiously)**:
+- `memory/*.sqlite` - Complete conversation history
+- `workspace/memory/*.md` - Daily work logs and project discussions
 
-**风险**：隐私泄露、工作信息泄露
+**Risk**: Privacy breach, work information exposure
 
-### 两种备份模式
+### Two Backup Modes
 
-**标准模式（默认）- 安全** ✅
-- 排除所有敏感文件（.env, auth-profiles.json, credentials/）
-- 可以安全上传到 GitHub（公开或私有仓库）
-- 适用于日常备份、分享配置
+**Standard Mode (Default) - Safe** ✅
+- Excludes all sensitive files (.env, auth-profiles.json, credentials/)
+- Safe to upload to GitHub (public or private repos)
+- Suitable for daily backups and config sharing
 
-**完整模式 - 包含敏感信息** ⚠️
-- 包含所有文件，包括 API 密钥和凭证
-- **不要上传到公开仓库！**
-- 仅用于迁移到新机器、灾难恢复
-- 使用后应立即删除
+**Full Mode - Contains Sensitive Data** ⚠️
+- Includes all files including API keys and credentials
+- **DO NOT upload to public repositories!**
+- Only for machine migration and disaster recovery
+- Delete immediately after use
 
-## 快速开始
+## Quick Start
 
 ```bash
 cd ~/.openclaw/openclaw-backup
 
-# 标准备份（安全，排除敏感信息）
+# Standard backup (safe, excludes sensitive info)
 ./backup.sh
 
-# 完整备份（包含 API 密钥等敏感信息）
+# Full backup (includes API keys and sensitive data)
 ./backup.sh --config config-full.json full-backup
 
-# 恢复
+# Restore
 ./restore.sh ~/.openclaw/backups/openclaw-backup-xxx.tar.gz
 ```
 
-## 特性
+## Features
 
-✅ **自动发现** - 自动查找所有工作空间，无需手动配置
-✅ **路径可移植** - 支持 VPS ↔ 本地无缝迁移
-✅ **配置驱动** - 通过 config.json 灵活控制备份内容
-✅ **安全可靠** - 恢复前自动备份现有配置
-✅ **预览模式** - 使用 --dry-run 查看将要恢复的内容
-✅ **双模式备份** - 标准模式安全，完整模式用于迁移
+✅ **Auto-Discovery** - Automatically finds all workspaces without manual configuration
+✅ **Path Portability** - Supports VPS ↔ Local seamless migration
+✅ **Config-Driven** - Flexible backup control via config.json
+✅ **Safe & Reliable** - Auto-backup existing config before restore
+✅ **Preview Mode** - Use --dry-run to preview restore contents
+✅ **Dual Backup Modes** - Standard mode for safety, full mode for migration
 
-## 文件说明
+## Files
 
-- `backup.sh` - 备份脚本
-- `restore.sh` - 恢复脚本
-- `cleanup.sh` - 清理旧备份
-- `config.json` - 标准配置（排除敏感文件）⭐
-- `config-full.json` - 完整配置（包含敏感文件）⚠️
-- `QUICKSTART.md` - 快速参考卡片
+- `backup.sh` - Backup script
+- `restore.sh` - Restore script
+- `cleanup.sh` - Cleanup old backups
+- `config.json` - Standard config (excludes sensitive files) ⭐
+- `config-full.json` - Full config (includes sensitive files) ⚠️
+- `QUICKSTART.md` - Quick reference card
 
-## 备份存储
+## Backup Storage
 
-备份文件自动保存到：
+Backups are automatically saved to:
 ```
 ~/.openclaw/backups/
 ├── openclaw-backup-20260305-212504.tar.gz
@@ -100,99 +100,99 @@ cd ~/.openclaw/openclaw-backup
 └── ...
 ```
 
-### 清理旧备份
+### Cleanup Old Backups
 ```bash
-# 保留最近 10 个备份（默认）
+# Keep last 10 backups (default)
 ./cleanup.sh
 
-# 保留最近 5 个备份
+# Keep last 5 backups
 ./cleanup.sh --keep 5
 ```
 
-## 常用命令
+## Common Commands
 
-### 备份
+### Backup
 ```bash
-# 标准备份（默认）
+# Standard backup (default)
 ./backup.sh
 
-# 指定名称
+# Specify name
 ./backup.sh my-backup
 
-# 完整备份（包含敏感信息）
+# Full backup (includes sensitive data)
 ./backup.sh --config config-full.json migration
 
-# 显示详细信息
+# Verbose output
 ./backup.sh --verbose
 
-# 查看帮助
+# Show help
 ./backup.sh --help
 ```
 
-### 恢复
+### Restore
 ```bash
-# 基本恢复
+# Basic restore
 ./restore.sh ~/.openclaw/backups/openclaw-backup-xxx.tar.gz
 
-# 预览模式（不实际修改）
+# Preview mode (no actual changes)
 ./restore.sh backup.tar.gz --dry-run
 
-# 显示详细信息
+# Verbose output
 ./restore.sh backup.tar.gz --verbose
 ```
 
-## 备份内容对比
+## Backup Content Comparison
 
-| 项目 | 标准模式 | 完整模式 |
-|------|---------|---------|
+| Item | Standard Mode | Full Mode |
+|------|--------------|-----------|
 | openclaw.json | ✅ | ✅ |
-| .env（API 密钥） | ❌ | ⚠️ |
+| .env (API keys) | ❌ | ⚠️ |
 | auth-profiles.json | ❌ | ⚠️ |
 | credentials/ | ❌ | ⚠️ |
-| 工作空间 | ✅ | ✅ |
-| 共享资源 | ✅ | ✅ |
-| 记忆数据 | ✅ | ✅ |
+| Workspaces | ✅ | ✅ |
+| Shared resources | ✅ | ✅ |
+| Memory data | ✅ | ✅ |
 | agents/ | ❌ | ⚠️ |
-| **GitHub 公开** | ✅ 安全 | ❌ 危险 |
-| **GitHub 私有** | ✅ 安全 | ⚠️ 谨慎 |
+| **GitHub Public** | ✅ Safe | ❌ Dangerous |
+| **GitHub Private** | ✅ Safe | ⚠️ Cautious |
 
-## 安全最佳实践
+## Security Best Practices
 
-### 1. 日常备份使用标准模式
+### 1. Use Standard Mode for Daily Backups
 ```bash
 ./backup.sh daily-$(date +%Y%m%d)
 ```
 
-### 2. 完整备份仅用于迁移
+### 2. Full Backup Only for Migration
 ```bash
-# 迁移前
+# Before migration
 ./backup.sh --config config-full.json migration
 
-# 迁移后立即删除
+# Delete immediately after migration
 rm ~/.openclaw/backups/openclaw-migration.tar.gz
 ```
 
-### 3. 上传到 GitHub 前检查
+### 3. Check Before Uploading to GitHub
 ```bash
-# 检查是否包含敏感文件
+# Check if backup contains sensitive files
 tar -tzf ~/.openclaw/backups/openclaw-backup-xxx.tar.gz | grep -E "(\.env|auth-profiles|credentials)"
 
-# 如果有输出，说明包含敏感文件，不要上传！
+# If output exists, DO NOT upload!
 ```
 
-### 4. 加密完整备份（可选）
+### 4. Encrypt Full Backups (Optional)
 ```bash
-# 加密
+# Encrypt
 gpg --encrypt --recipient your@email.com \
   ~/.openclaw/backups/openclaw-full-backup.tar.gz
 
-# 删除未加密的原文件
+# Delete unencrypted original
 rm ~/.openclaw/backups/openclaw-full-backup.tar.gz
 ```
 
-## GitHub 集成
+## GitHub Integration
 
-### 上传标准备份（安全）
+### Upload Standard Backup (Safe)
 ```bash
 gh release create v20260305 \
   --repo username/openclaw-workspace \
@@ -200,73 +200,73 @@ gh release create v20260305 \
   ~/.openclaw/backups/openclaw-backup-20260305.tar.gz
 ```
 
-### 下载并恢复
+### Download and Restore
 ```bash
 gh release download v20260305 --repo username/openclaw-workspace
 ./restore.sh openclaw-backup-20260305.tar.gz
 openclaw gateway restart
 ```
 
-## 泄露后的应对措施
+## Response to Data Breach
 
-如果不小心泄露了包含敏感信息的备份：
+If you accidentally exposed a backup with sensitive information:
 
-1. **立即撤销 API 密钥**
+1. **Immediately Revoke API Keys**
    - Claude API: https://console.anthropic.com/settings/keys
    - OpenAI: https://platform.openai.com/api-keys
-   - 其他服务：各自的控制台
+   - Other services: respective control panels
 
-2. **删除泄露的文件**
-   - 从 GitHub 删除（如果上传了）
-   - 清空 Git 历史（如果提交了）
+2. **Delete Exposed Files**
+   - Remove from GitHub (if uploaded)
+   - Clear Git history (if committed)
 
-3. **重新生成凭证**
-   - 生成新的 API 密钥
-   - 更新 `.env` 文件
-   - 重新配置 Telegram bots
+3. **Regenerate Credentials**
+   - Generate new API keys
+   - Update `.env` file
+   - Reconfigure Telegram bots
 
-4. **检查账户活动**
-   - 查看 API 使用记录
-   - 检查异常调用
-   - 监控费用变化
+4. **Check Account Activity**
+   - Review API usage logs
+   - Check for anomalous calls
+   - Monitor billing changes
 
-## 推荐工作流
+## Recommended Workflows
 
-### 日常使用
+### Daily Use
 ```bash
-# 1. 每周标准备份
+# 1. Weekly standard backup
 ./backup.sh weekly-$(date +%Y%m%d)
 
-# 2. 上传到 GitHub（私有仓库）
+# 2. Upload to GitHub (private repo)
 gh release create v$(date +%Y%m%d) \
   --repo username/openclaw-workspace \
   --title "Weekly Backup" \
   ~/.openclaw/backups/openclaw-weekly-*.tar.gz
 
-# 3. 清理本地旧备份
+# 3. Cleanup local old backups
 ./cleanup.sh --keep 5
 ```
 
-### 迁移场景
+### Migration Scenario
 ```bash
-# 1. 完整备份（包含敏感信息）
+# 1. Full backup (includes sensitive data)
 ./backup.sh --config config-full.json migration
 
-# 2. 传输到新机器（使用安全方式）
+# 2. Transfer to new machine (use secure method)
 scp ~/.openclaw/backups/openclaw-migration.tar.gz new-machine:~/
 
-# 3. 在新机器上恢复
+# 3. Restore on new machine
 cd ~/.openclaw/openclaw-backup
 ./restore.sh ~/openclaw-migration.tar.gz
 openclaw gateway restart
 
-# 4. 删除备份文件
+# 4. Delete backup files
 rm ~/openclaw-migration.tar.gz
 ```
 
-## 配置
+## Configuration
 
-编辑 `config.json` 来自定义备份行为：
+Edit `config.json` to customize backup behavior:
 
 ```json
 {
@@ -283,12 +283,12 @@ rm ~/openclaw-migration.tar.gz
 }
 ```
 
-详细配置说明请查看 `config.json` 和 `config-full.json` 中的注释。
+See comments in `config.json` and `config-full.json` for detailed configuration options.
 
-## 版本
+## Version
 
-v1.0.0 - 2026-03-05
+v1.1.0 - 2026-03-05
 
 ---
 
-**记住：安全第一，便利第二。日常使用标准模式，完整备份仅用于迁移。**
+**Remember: Security first, convenience second. Use standard mode daily, full backup only for migration.**

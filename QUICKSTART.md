@@ -1,122 +1,82 @@
-# OpenClaw 通用备份工具 - 快速开始
+# OpenClaw Backup Tool - Quick Start
 
-## 一分钟上手
+## One-Minute Setup
 
-### 1. 备份
-
+### Install
 ```bash
-cd ~/.openclaw
-./backup-universal.sh
+curl -fsSL https://raw.githubusercontent.com/JAMESHPF/openclaw-backup/main/install.sh | bash
 ```
 
-输出示例：
-```
-🔄 开始备份 OpenClaw 配置...
-📋 备份核心配置...
-   ✓ openclaw.json
-   ✓ .env
-📁 自动发现工作空间...
-   ✓ workspace
-   ✓ workspace-dev
-   ✓ workspace-atlas
-   ✓ workspace-content
-🤝 备份共享资源...
-   ✓ shared
-🧠 备份 memory...
-   ✓ memory
-✅ 备份完成: ~/openclaw-backup-20260305-212504.tar.gz
-   文件大小: 7.8M
-```
-
-### 2. 恢复
-
+### Use
 ```bash
-cd ~/.openclaw
-./restore-universal.sh ~/openclaw-backup-20260305-212504.tar.gz
-openclaw gateway restart
+cd ~/.openclaw/openclaw-backup
+
+# Backup
+./backup.sh
+
+# Restore
+./restore.sh ~/.openclaw/backups/openclaw-backup-xxx.tar.gz
 ```
 
-## 常用命令
+## Common Commands
 
-### 指定备份名称
+### Specify Backup Name
 ```bash
-./backup-universal.sh my-backup-name
+./backup.sh my-backup-name
 ```
 
-### 查看帮助
+### Show Help
 ```bash
-./backup-universal.sh --help
-./restore-universal.sh --help
+./backup.sh --help
+./restore.sh --help
 ```
 
-### 预览恢复（不实际修改）
+### Preview Restore (No Actual Changes)
 ```bash
-./restore-universal.sh backup.tar.gz --dry-run
+./restore.sh backup.tar.gz --dry-run
 ```
 
-### 显示详细信息
+### Verbose Output
 ```bash
-./backup-universal.sh --verbose
-./restore-universal.sh backup.tar.gz --verbose
+./backup.sh --verbose
+./restore.sh backup.tar.gz --verbose
 ```
 
-## 配置文件位置
+## Configuration
 
-`~/.openclaw/backup-config.json`
-
-## 完整文档
-
-查看 `README-universal.md` 了解：
-- 配置文件详解
-- 使用场景
-- 故障排查
-- 高级用法
-
-## 核心优势
-
-✅ **自动发现** - 无需手动列出 agent 名称
-✅ **路径可移植** - VPS ↔ 本地无缝迁移
-✅ **配置驱动** - 灵活的备份策略
-✅ **安全可靠** - 恢复前自动备份现有配置
-✅ **预览模式** - 查看将要恢复的内容
-
-## 快速配置
-
-编辑 `backup-config.json`：
+Edit `config.json`:
 
 ```json
 {
   "openclaw_dir": "~/.openclaw",
   "backup": {
     "include": {
-      "shared": true,      // 共享资源
-      "agents": false,     // agents 配置
-      "credentials": false, // 凭证（敏感）
-      "memory": true       // 记忆数据
+      "shared": true,      // Shared resources
+      "agents": false,     // Agents config
+      "credentials": false, // Credentials (sensitive)
+      "memory": true       // Memory data
     }
   }
 }
 ```
 
-## 上传到 GitHub
+## GitHub Integration
 
+### Upload
 ```bash
 gh release create v20260305 \
   --repo username/openclaw-workspace \
   --title "Backup 2026-03-05" \
-  ~/openclaw-backup-20260305.tar.gz
+  ~/.openclaw/backups/openclaw-backup-20260305.tar.gz
 ```
 
-## 从 GitHub 恢复
-
+### Download and Restore
 ```bash
 gh release download v20260305 --repo username/openclaw-workspace
-./restore-universal.sh openclaw-backup-20260305.tar.gz
+./restore.sh openclaw-backup-20260305.tar.gz
 openclaw gateway restart
 ```
 
-## 需要帮助？
+## Need Help?
 
-1. 查看 `README-universal.md` 完整文档
-2. 运行 `--help` 查看命令选项
-3. 使用 `--dry-run` 预览操作
+See `README.md` for full documentation.
