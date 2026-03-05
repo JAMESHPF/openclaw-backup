@@ -57,6 +57,9 @@ This tool has two modes to balance security and completeness:
 
 > **Rule of thumb:** Use standard mode for everything except machine migration. Delete full backups immediately after use.
 
+> [!WARNING]
+> Even in standard mode, `openclaw.json` is included. Make sure your `openclaw.json` does not contain plaintext API keys or bot tokens — store them in `.env` and reference via environment variables instead.
+
 ## Configuration
 
 Edit `config.json` to customize what gets backed up:

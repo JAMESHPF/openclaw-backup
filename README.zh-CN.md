@@ -57,6 +57,9 @@ cd ~/.openclaw/openclaw-backup
 
 > **原则：** 除机器迁移外一律使用标准模式。完整备份用完立即删除。
 
+> [!WARNING]
+> 即使在标准模式下，`openclaw.json` 也会被包含。请确保 `openclaw.json` 中没有明文 API 密钥或 Bot Token — 应将它们存放在 `.env` 中，通过环境变量引用。
+
 ## 配置
 
 编辑 `config.json` 自定义备份内容：
