@@ -91,15 +91,20 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # 删除旧备份
+echo "🗑️  开始删除..."
 DELETED=0
-find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f -print0 | \
-    xargs -0 ls -t | \
-    tail -n "$DELETE_COUNT" | \
-    while read -r file; do
-        rm "$file"
+
+# 使用数组存储要删除的文件
+mapfile -t FILES_TO_DELETE < <(find "$BACKUPS_DIR" -name "openclaw-backup-*.tar.gz" -type f -print0 | xargs -0 ls -t | tail -n "$DELETE_COUNT")
+
+for file in "${FILES_TO_DELETE[@]}"; do
+    if [ -f "$file" ]; then
+        # 同时删除校验和文件
+        rm -f "$file" "${file}.sha256"
         echo "  ✓ 已删除: $(basename "$file")"
         DELETED=$((DELETED + 1))
-    done
+    fi
+done
 
 echo ""
 echo "✅ 清理完成，已删除 $DELETE_COUNT 个旧备份"

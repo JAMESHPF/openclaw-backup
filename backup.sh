@@ -112,6 +112,23 @@ if [ ! -d "$OPENCLAW_DIR" ]; then
     exit 1
 fi
 
+# 检查 OpenClaw 是否正在运行
+if pgrep -f "openclaw" > /dev/null 2>&1; then
+    echo ""
+    echo "⚠️  检测到 OpenClaw 正在运行"
+    echo "   备份运行中的 OpenClaw 可能导致数据不一致"
+    echo "   建议先停止服务: openclaw gateway stop"
+    echo ""
+    read -p "是否继续备份? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ 已取消备份"
+        exit 0
+    fi
+    echo "⚠️  继续备份（可能存在风险）..."
+    echo ""
+fi
+
 # 创建临时备份目录
 mkdir -p "$BACKUP_DIR"
 
@@ -244,6 +261,18 @@ mkdir -p "$BACKUPS_DIR"
 OUTPUT_PATH="$BACKUPS_DIR/$ARCHIVE_NAME"
 mv "$ARCHIVE_NAME" "$OUTPUT_PATH"
 rm -rf "$BACKUP_DIR"
+
+# 生成校验和
+echo "🔐 生成校验和..."
+if command -v sha256sum &> /dev/null; then
+    sha256sum "$OUTPUT_PATH" > "$OUTPUT_PATH.sha256"
+    echo "   ✓ SHA256: $OUTPUT_PATH.sha256"
+elif command -v shasum &> /dev/null; then
+    shasum -a 256 "$OUTPUT_PATH" > "$OUTPUT_PATH.sha256"
+    echo "   ✓ SHA256: $OUTPUT_PATH.sha256"
+else
+    echo "   ⚠️  未找到 sha256sum/shasum，跳过校验和生成"
+fi
 
 echo ""
 echo "✅ 备份完成: $OUTPUT_PATH"

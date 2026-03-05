@@ -2,6 +2,28 @@
 
 OpenClaw 配置的完整备份和恢复解决方案。
 
+## 📦 安装
+
+### 一键安装（推荐）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JAMESHPF/openclaw-backup/main/install.sh | bash
+```
+
+### 手动安装
+
+```bash
+git clone https://github.com/JAMESHPF/openclaw-backup.git ~/.openclaw/openclaw-backup
+cd ~/.openclaw/openclaw-backup
+chmod +x *.sh
+```
+
+### 依赖要求
+
+- OpenClaw（必须）
+- jq 或 python3（必须，用于解析配置）
+- git（安装时需要）
+
 ## ⚠️ 重要安全提示
 
 **OpenClaw 配置包含敏感信息，备份时需要特别注意安全！**

@@ -69,6 +69,39 @@ if [ ! -f "$BACKUP_FILE" ]; then
     exit 1
 fi
 
+# 验证校验和（如果存在）
+CHECKSUM_FILE="${BACKUP_FILE}.sha256"
+if [ -f "$CHECKSUM_FILE" ]; then
+    echo "🔐 验证备份完整性..."
+    if command -v sha256sum &> /dev/null; then
+        if sha256sum -c "$CHECKSUM_FILE" 2>/dev/null; then
+            echo "   ✓ 校验和验证通过"
+        else
+            echo "   ❌ 校验和验证失败！备份文件可能已损坏"
+            read -p "是否继续恢复? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "❌ 已取消恢复"
+                exit 1
+            fi
+        fi
+    elif command -v shasum &> /dev/null; then
+        if shasum -a 256 -c "$CHECKSUM_FILE" 2>/dev/null; then
+            echo "   ✓ 校验和验证通过"
+        else
+            echo "   ❌ 校验和验证失败！备份文件可能已损坏"
+            read -p "是否继续恢复? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "❌ 已取消恢复"
+                exit 1
+            fi
+        fi
+    fi
+else
+    echo "⚠️  未找到校验和文件，跳过完整性验证"
+fi
+
 # 检查配置文件
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "⚠️  配置文件不存在: $CONFIG_FILE"
