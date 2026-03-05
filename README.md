@@ -72,9 +72,6 @@ cd ~/.openclaw/openclaw-backup
 
 # Restore
 ./restore.sh ~/.openclaw/backups/openclaw-backup-xxx.tar.gz
-
-# Setup automatic backups (recommended)
-./setup-auto-backup.sh
 ```
 
 ## Features
@@ -85,16 +82,12 @@ cd ~/.openclaw/openclaw-backup
 ✅ **Safe & Reliable** - Auto-backup existing config before restore
 ✅ **Preview Mode** - Use --dry-run to preview restore contents
 ✅ **Dual Backup Modes** - Standard mode for safety, full mode for migration
-✅ **Automatic Backups** - Schedule daily/weekly backups with Telegram notifications
-✅ **GitHub Integration** - Auto-upload backups to private repository
 
 ## Files
 
 - `backup.sh` - Backup script
 - `restore.sh` - Restore script
 - `cleanup.sh` - Cleanup old backups
-- `auto-backup.sh` - Automatic backup with notifications
-- `setup-auto-backup.sh` - Setup automatic backups
 - `config.json` - Standard config (excludes sensitive files) ⭐
 - `config-full.json` - Full config (includes sensitive files) ⚠️
 - `QUICKSTART.md` - Quick reference card
@@ -240,37 +233,6 @@ If you accidentally exposed a backup with sensitive information:
    - Monitor billing changes
 
 ## Recommended Workflows
-
-### Automatic Backups (Recommended)
-
-Set up automatic daily/weekly backups with agent notifications:
-
-```bash
-# Run setup wizard
-./setup-auto-backup.sh
-
-# The wizard will guide you through:
-# 1. Backup schedule (daily/weekly/custom)
-# 2. GitHub upload (optional)
-# 3. Agent notification (which agent to notify)
-# 4. Backup retention policy
-
-# Test the automatic backup
-./auto-backup.sh
-
-# Check logs
-tail -f ~/.openclaw/logs/auto-backup.log
-
-# Disable automatic backups
-./setup-auto-backup.sh --disable
-```
-
-**Features:**
-- Scheduled backups via cron
-- Agent notifications on success/failure (via OpenClaw internal messaging)
-- Automatic GitHub upload
-- Old backup cleanup
-- Detailed logging
 
 ### Daily Use
 ```bash

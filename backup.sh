@@ -10,7 +10,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/config.json"
 BACKUP_NAME=""
 VERBOSE=false
-AUTO_YES=false
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
@@ -23,10 +22,6 @@ while [[ $# -gt 0 ]]; do
             VERBOSE=true
             shift
             ;;
-        --yes|-y)
-            AUTO_YES=true
-            shift
-            ;;
         --help|-h)
             cat << EOF
 OpenClaw Backup Tool
@@ -36,7 +31,6 @@ Usage: $0 [backup-name] [options]
 Options:
   --config FILE     Specify config file (default: config.json)
   --verbose, -v     Show verbose output
-  --yes, -y         Skip confirmation prompts (for automation)
   --help, -h        Show this help
 
 Examples:
@@ -125,15 +119,11 @@ if pgrep -f "openclaw" > /dev/null 2>&1; then
     echo "   Backing up running OpenClaw may cause data inconsistency"
     echo "   Recommended to stop service first: openclaw gateway stop"
     echo ""
-    if [ "$AUTO_YES" = true ]; then
-        echo "⚠️  Auto-confirmed (--yes), continuing backup..."
-    else
-        read -p "Continue backup? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "❌ Backup cancelled"
-            exit 0
-        fi
+    read -p "Continue backup? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Backup cancelled"
+        exit 0
     fi
     echo "⚠️  Continuing backup (may have risks)..."
     echo ""
